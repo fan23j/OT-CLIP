@@ -452,7 +452,18 @@ def parse_args(args):
         action="store_true",
         help='Use SigLip (sigmoid) loss.'
     )
-
+    # OT-CLIP
+    parser.add_argument(
+        "--max-batch-size",
+        default=128,
+        help='Max batch size for machine.'
+    )
+    parser.add_argument(
+        "--eval-ot",
+        default=False,
+        action="store_true",
+        help='Run OT inference.'
+    )
     args = parser.parse_args(args)
 
     # If some params are not passed, we use the default values based on model name.

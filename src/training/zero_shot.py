@@ -1,6 +1,7 @@
 import logging
 
 import torch
+import torch.nn.functional as F
 from tqdm import tqdm
 
 from open_clip import (
@@ -21,6 +22,22 @@ def accuracy(output, target, topk=(1,)):
         for k in topk
     ]
 
+def sinkhorn(C, ratio, reg=0.1, num_iters=7, tol=1e-3):
+    N = C.shape[0]
+
+    K = torch.exp(-C / reg).to(C.device)
+
+    u = torch.ones(N, dtype=C.dtype, device=C.device) / N
+    v = ratio.to(C.device)
+
+    for _ in range(num_iters):
+        u = u / (K @ v)
+        v = ratio / (K.T @ u)
+
+    # Compute the transport matrix
+    transport_matrix = torch.diag(u) @ K @ torch.diag(v)
+
+    return transport_matrix
 
 def run(model, classifier, dataloader, args):
     autocast = get_autocast(args.precision)
@@ -49,6 +66,58 @@ def run(model, classifier, dataloader, args):
     top1 = top1 / n
     top5 = top5 / n
     return top1, top5
+
+def run_ot(model, classifier, dataloader, args, num_iters=10):
+    autocast = get_autocast(args.precision)
+    input_dtype = get_input_dtype(args.precision)
+
+    with torch.no_grad():
+        top1, top5, n = 0., 0., 0.
+        for images, target in tqdm(dataloader, unit_scale=args.batch_size):
+            images = images.to(device=args.device, dtype=input_dtype)
+            target = target.to(args.device)
+        
+            with autocast():
+                # predict
+                output = model(image=images)
+                image_features = output['image_features'] if isinstance(output, dict) else output[0] # [bs, 1024]
+
+                sigma_1 = torch.matmul(image_features, image_features.T) # [bs, bs]
+                sigma_2 = torch.matmul(classifier, classifier.T) # [num_class, num_class]
+                C = 1.0 - torch.matmul(image_features, classifier.T).to(args.device) #[bs, num_class]
+                P = F.softmax(-C, dim=1)
+
+                tolerance = 1e-2  # Define a small tolerance
+                prev_C = C.clone()  # Initialize with the current value of C
+                import pudb; pudb.set_trace()
+                for iteration in range(num_iters):
+                    C = C - sigma_1 @ P
+                    P = F.softmax(-C, dim=1)
+
+                    # Check for convergence
+                    delta = torch.norm(C - prev_C)  # Calculate the change in C
+                    if delta < tolerance:
+                        break  # Stop if change is smaller than tolerance
+
+                    prev_C = C.clone()  # Update previous value for next iteration
+
+                logits = P
+
+            # measure accuracy
+            acc1, acc5 = accuracy(logits, target, topk=(1, 5))
+            top1 += acc1
+            top5 += acc5
+            n += images.size(0)
+
+    top1 = (top1 / n)
+    top5 = (top5 / n)
+    return top1, top5
+
+def get_eval_fn(args):
+    if args.eval_ot:
+        return run_ot
+    else:
+        return run
 
 
 def zero_shot_eval(model, data, epoch, args, tokenizer=None):
@@ -80,12 +149,14 @@ def zero_shot_eval(model, data, epoch, args, tokenizer=None):
 
     logging.info("Using classifier")
     results = {}
+    
+    eval_fn = get_eval_fn(args)
     if "imagenet-val" in data:
-        top1, top5 = run(model, classifier, data["imagenet-val"].dataloader, args)
+        top1, top5 = eval_fn(model, classifier, data["imagenet-val"].dataloader, args)
         results["imagenet-zeroshot-val-top1"] = top1
         results["imagenet-zeroshot-val-top5"] = top5
     if "imagenet-v2" in data:
-        top1, top5 = run(model, classifier, data["imagenet-v2"].dataloader, args)
+        top1, top5 = eval_fn(model, classifier, data["imagenet-v2"].dataloader, args)
         results["imagenetv2-zeroshot-val-top1"] = top1
         results["imagenetv2-zeroshot-val-top5"] = top5
 

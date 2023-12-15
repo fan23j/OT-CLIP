@@ -74,7 +74,7 @@ def build_zero_shot_classifier(
                 _process_batch(batch)
                 for batch in iter_wrap(batched(classnames, num_classes_per_batch))
             ]
-            zeroshot_weights = torch.cat(batched_embeds, dim=1)
+            zeroshot_weights = torch.cat(batched_embeds, dim=0)
         else:
             zeroshot_weights = _process_batch(classnames)
     return zeroshot_weights

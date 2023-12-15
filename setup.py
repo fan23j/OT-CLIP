@@ -6,9 +6,6 @@ from os import path
 
 here = path.abspath(path.dirname(__file__))
 
-# Get the long description from the README file
-with open(path.join(here, 'README.md'), encoding='utf-8') as f:
-    long_description = f.read()
 
 def _read_reqs(relpath):
     fullpath = path.join(path.dirname(__file__), relpath)
@@ -23,7 +20,6 @@ setup(
     name='open_clip_torch',
     version=__version__,
     description='OpenCLIP',
-    long_description=long_description,
     long_description_content_type='text/markdown',
     url='https://github.com/mlfoundations/open_clip',
     author='',
