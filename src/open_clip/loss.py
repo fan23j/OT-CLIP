@@ -15,6 +15,29 @@ try:
 except ImportError:
     hvd = None
 
+def sinkhorn(P, a, b_d, b_u, logit_scale, max_iters=5):
+    
+    P = torch.exp(-(1.0 - P / logit_scale))
+
+    for _ in range(max_iters):
+        
+        P_prev = P
+
+        # proj c1 with NaN protection
+        sum_P = P.sum(dim=1)
+        sum_P[sum_P == 0] = 1  # Replace zeros with ones to avoid division by zero
+        P = torch.diag(a / sum_P) @ P
+        
+        # proj c2 with NaN protection
+        sum_P_t = P.t().sum(dim=1)
+        sum_P_t[sum_P_t == 0] = 1
+        P = P @ torch.diag(torch.max(b_d / sum_P_t, torch.ones(P.shape[1]).to(P.device)))
+        
+        # proj c3 with NaN protection
+        sum_P_t = P.t().sum(dim=1)
+        sum_P_t[sum_P_t == 0] = 1
+        P = P @ torch.diag(torch.min(b_u / sum_P_t, torch.ones(P.shape[1]).to(P.device)))
+    return P
 
 def gather_features(
         image_features,
@@ -120,15 +143,28 @@ class ClipLoss(nn.Module):
     def forward(self, image_features, text_features, logit_scale, output_dict=False):
         device = image_features.device
         logits_per_image, logits_per_text = self.get_logits(image_features, text_features, logit_scale)
+        all_image_features, all_text_features = gather_features(
+            image_features, text_features,
+            self.local_loss, self.gather_with_grad, self.rank, self.world_size, self.use_horovod)
 
-        labels = self.get_ground_truth(device, logits_per_image.shape[0])
+#         sigma_1 = all_image_features @ all_image_features.T * logit_scale
+#         sigma_2 = all_text_features @ all_text_features.T * logit_scale
+        n = logits_per_image.shape[0]
 
-        total_loss = (
+        a = torch.ones((n,)).to(device)
+        b_d = torch.full((n,), 0.1 * n).to(device)
+        b_u = torch.full((n,), 0.9 * n).to(device)
+        P = sinkhorn(logits_per_image, a, b_u, b_d, logit_scale)
+
+        labels = self.get_ground_truth(image_features.device, logits_per_image.shape[0])
+        loss = (
             F.cross_entropy(logits_per_image, labels) +
             F.cross_entropy(logits_per_text, labels)
         ) / 2
+        sinkhorn_loss = F.cross_entropy(P, labels)
+        total_loss = sinkhorn_loss + loss
 
-        return {"contrastive_loss": total_loss} if output_dict else total_loss
+        return { "contrastive_loss": total_loss} if output_dict else total_loss
 
 
 class CoCaLoss(ClipLoss):

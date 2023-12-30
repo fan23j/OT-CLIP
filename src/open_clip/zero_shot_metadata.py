@@ -86,13 +86,14 @@ OPENAI_IMAGENET_TEMPLATES = (
 # a much smaller subset of above prompts
 # from https://github.com/openai/CLIP/blob/main/notebooks/Prompt_Engineering_for_ImageNet.ipynb
 SIMPLE_IMAGENET_TEMPLATES = (
-    lambda c: f'itap of a {c}.',
-    lambda c: f'a bad photo of the {c}.',
-    lambda c: f'a origami {c}.',
-    lambda c: f'a photo of the large {c}.',
-    lambda c: f'a {c} in a video game.',
-    lambda c: f'art of the {c}.',
-    lambda c: f'a photo of the small {c}.',
+#     lambda c: f'itap of a {c}.',
+#     lambda c: f'a bad photo of the {c}.',
+#     lambda c: f'a origami {c}.',
+#     lambda c: f'a photo of the large {c}.',
+#     lambda c: f'a {c} in a video game.',
+#     lambda c: f'art of the {c}.',
+#     lambda c: f'a photo of the small {c}.',
+      lambda c: f'{c}',
 )
 
 
@@ -264,3 +265,38 @@ IMAGENET_CLASSNAMES = (
     "earth star fungus", "hen of the woods mushroom", "bolete", "corn cob", "toilet paper"
 )
 
+IMAGENET_A_CLASSNAMES = (
+ "stingray", "goldfinch", "junco", "American robin", "jay", "bald eagle", "vulture",
+ "newt", "American bullfrog", "box turtle", "green iguana", "agama", "chameleon",
+ "American alligator", "garter snake", "harvestman", "scorpion", "tarantula",
+ "centipede", "sulphur-crested cockatoo", "lorikeet", "hummingbird", "toucan",
+ "duck", "goose", "koala", "jellyfish", "sea anemone", "flatworm", "snail",
+ "crayfish", "hermit crab", "flamingo", "great egret", "oystercatcher", "pelican",
+ "sea lion", "Chihuahua", "Golden Retriever", "Rottweiler", "German Shepherd Dog",
+ "pug", "red fox", "Persian cat", "lynx", "lion", "American black bear", "mongoose",
+ "ladybug", "rhinoceros beetle", "weevil", "fly", "bee", "ant", "grasshopper",
+ "stick insect", "cockroach", "mantis", "leafhopper", "dragonfly", "monarch butterfly",
+ "small white", "gossamer-winged butterfly", "starfish", "cottontail rabbit",
+ "porcupine", "fox squirrel", "marmot", "bison", "skunk", "armadillo", "baboon",
+ "white-headed capuchin", "African bush elephant", "pufferfish", "academic gown",
+ "accordion", "acoustic guitar", "airliner", "ambulance", "apron", "balance beam",
+ "balloon", "banjo", "barn", "wheelbarrow", "basketball", "lighthouse", "beaker",
+ "bikini", "bow", "bow tie", "breastplate", "broom", "candle", "canoe", "castle",
+ "cello", "chain", "chest", "Christmas stocking", "cowboy boot", "cradle",
+ "rotary dial telephone", "digital clock", "doormat", "drumstick", "dumbbell",
+ "envelope", "feather boa", "flagpole", "forklift", "fountain", "garbage truck",
+ "goblet", "go-kart", "golf cart", "grand piano", "hair dryer", "clothes iron",
+ "jack-o'-lantern", "jeep", "kimono", "lighter", "limousine", "manhole cover",
+ "maraca", "marimba", "mask", "mitten", "mosque", "nail", "obelisk", "ocarina",
+ "organ", "parachute", "parking meter", "piggy bank", "billiard table", "hockey puck",
+ "quill", "racket", "reel", "revolver", "rocking chair", "rugby ball", "salt shaker",
+ "sandal", "saxophone", "school bus", "schooner", "sewing machine", "shovel",
+ "sleeping bag", "snowmobile", "snowplow", "soap dispenser", "spatula", "spider web",
+ "steam locomotive", "stethoscope", "couch", "submarine", "sundial", "suspension bridge",
+ "syringe", "tank", "teddy bear", "toaster", "torch", "tricycle", "umbrella",
+ "unicycle", "viaduct", "volleyball", "washing machine", "water tower", "wine bottle",
+ "shipwreck", "guacamole", "pretzel", "cheeseburger", "hot dog", "broccoli",
+ "cucumber", "bell pepper", "mushroom", "lemon", "banana", "custard apple",
+ "pomegranate", "carbonara", "bubble", "cliff", "volcano", "baseball player",
+ "rapeseed", "yellow lady's slipper", "corn", "acorn"
+)

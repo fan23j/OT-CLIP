@@ -66,6 +66,8 @@ def build_zero_shot_classifier(
         class_embeddings = class_embeddings.reshape(
             num_batch_classes, num_templates, -1
         ).mean(dim=1)
+        class_embeddings = class_embeddings / class_embeddings.norm(dim=1, keepdim=True)
+        class_embeddings = class_embeddings.T
         return class_embeddings
 
     with torch.no_grad():
@@ -74,7 +76,7 @@ def build_zero_shot_classifier(
                 _process_batch(batch)
                 for batch in iter_wrap(batched(classnames, num_classes_per_batch))
             ]
-            zeroshot_weights = torch.cat(batched_embeds, dim=0)
+            zeroshot_weights = torch.cat(batched_embeds, dim=1)
         else:
             zeroshot_weights = _process_batch(classnames)
     return zeroshot_weights
