@@ -36,9 +36,9 @@ from training.params import parse_args
 from training.scheduler import cosine_lr, const_lr, const_lr_cooldown
 from training.train import train_one_epoch, evaluate
 from training.file_utils import pt_load, check_exists, start_sync_process, remote_sync
-# import torch.distributed as dist
+import torch.distributed as dist
 
-# dist.init_process_group(backend="nccl", init_method="env://")
+dist.init_process_group(backend="nccl", init_method="env://")
 
 LATEST_CHECKPOINT_NAME = "epoch_latest.pt"
 

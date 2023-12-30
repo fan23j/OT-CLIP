@@ -1,5 +1,6 @@
 import torch.nn as nn
 from torch.nn import functional as F
+import torch
 
 class Cross_Entropy_Loss(nn.Module):
     def __init__(self):
@@ -31,7 +32,7 @@ class DBOT_Sinkhorn_Loss(nn.Module):
         return logits_per_image, logits_per_text
     
     def dbot_sinkhorn(self, P, max_iters=5):
-        n = logits_per_image.shape[0]
+        n = P.shape[0]
         device = P.device
 
         a = torch.ones((n,)).to(device)

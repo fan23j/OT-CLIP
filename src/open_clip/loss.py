@@ -31,11 +31,7 @@ def gather_tensor(tensor, with_grad=False, world_size=1, rank=0, local_loss=Fals
 
 def gather_features(
     image_features,
-    image_aug_features,
     text_features,
-    text_aug_features,
-    unpaired_image_features=None,
-    unpaired_image_aug_features=None,
     local_loss=False,
     gather_with_grad=False,
     rank=0,
@@ -82,7 +78,7 @@ class ClipLoss(nn.Module):
         self.rank = rank
         self.world_size = world_size
         self.use_horovod = use_horovod
-        self.losses = [_loss_factory[name] for name in losses]
+        self.losses = [_loss_factory[name]() for name in losses]
         
         # cache state
         self.prev_num_logits = 0
@@ -109,14 +105,14 @@ class ClipLoss(nn.Module):
 
     def forward(self, image_features, text_features, logit_scale, output_dict=False):
         device = image_features.device
-        image_features, text_features = gather_features(
+        all_image_features, all_text_features = gather_features(
             image_features, text_features,
-            self.local_loss, self.gather_with_grad, self.rank, self.world_size, self.use_horovod)
-        labels = self.get_ground_truth(image_features.device, logits_per_image.shape[0])
+            self.local_loss, self.gather_with_grad, self.rank, self.world_size)
+        labels = self.get_ground_truth(image_features.device, image_features.shape[0])
 
         loss_states = {}
         for loss in self.losses:
-            loss_output = loss(image_features, text_features, logit_scale, labels)
+            loss_output = loss(all_image_features, all_text_features, logit_scale, labels)
             loss_dict = loss_output
             loss_states.update(loss_dict)
 

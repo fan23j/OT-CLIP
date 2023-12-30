@@ -461,8 +461,8 @@ def parse_args(args):
     )
     parser.add_argument(
         "--losses",
-        type=str[],
-        default=["cross_entropy"],
+        nargs='*',
+        default="cross_entropy",
         help="List of loss functions.",
     )
     args = parser.parse_args(args)

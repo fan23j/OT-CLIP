@@ -1,10 +1,8 @@
 import matplotlib.pyplot as plt
 import torch
 import torch.nn.functional as F
-import cuml
 from tqdm import tqdm
 import numpy as np
-import cupy as cp
 
 def concatenate_features(highest_confidence_features_per_class):
     # Convert the dictionary values to a list of feature vectors
@@ -77,27 +75,7 @@ def plot_class_acc(preds, args):
     plt.title(f'Class-wise Accuracy - Batch Size: {args.batch_size}')
     plt.savefig(f'{args.batch_size}_class_accuracy.png')
     plt.close()
-    
-def get_centroids(model, dataloader, args):
-    model.to(args.device)
-    features = []
 
-    with torch.no_grad():
-        for images, _ in tqdm(dataloader, unit_scale=args.batch_size):
-            images = images.to(args.device)
-            feature_vectors = model(images)
-            # Convert PyTorch tensors to cuPy arrays and accumulate
-            features.append(cp.asarray(feature_vectors.cpu().numpy()))
-
-    # Concatenate features in cuPy
-    features = cp.concatenate(features, axis=0)
-
-    # Perform KMeans clustering with cuML
-    kmeans = cuml.KMeans(n_clusters=1000)
-    kmeans.fit(features)
-    centroids = kmeans.cluster_centers_
-    import pudb; pudb.set_trace()
-    return centroids
     
     
 def sinkhorn(P, a, b_d, b_u, max_iters=1000, epsilon=1e-8):

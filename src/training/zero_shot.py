@@ -3,8 +3,6 @@ import logging
 import torch
 import torch.nn.functional as F
 from tqdm import tqdm
-import cupy as cp
-import cuml
 import numpy as np
 import ot
 
@@ -18,7 +16,7 @@ from open_clip import (
     IMAGENET_A_CLASSNAMES,
 )
 from .precision import get_autocast
-from .zero_shot_utils import get_centroids, sinkhorn, sinkhorn_knopp
+from .zero_shot_utils import sinkhorn, sinkhorn_knopp
 
 def plot_heatmap(tensor, name="test.png"):
     """
