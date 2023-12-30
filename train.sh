@@ -10,4 +10,4 @@ torchrun --nproc_per_node 4 -m training.main \
     --precision amp \
     --workers 8 \
     --imagenet-val /dfs/data/data/ILSVRC2012/val \
-#     --resume 'logs/orig/checkpoints/epoch_25.pt'
+    --losses ["cross_entropy", "dbot_sinkhorn"]

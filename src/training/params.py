@@ -454,15 +454,16 @@ def parse_args(args):
     )
     # OT-CLIP
     parser.add_argument(
-        "--max-batch-size",
-        default=128,
-        help='Max batch size for machine.'
-    )
-    parser.add_argument(
         "--eval-ot",
         default=False,
         action="store_true",
         help='Run OT inference.'
+    )
+    parser.add_argument(
+        "--losses",
+        type=str[],
+        default=["cross_entropy"],
+        help="List of loss functions.",
     )
     args = parser.parse_args(args)
 
