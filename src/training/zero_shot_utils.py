@@ -36,7 +36,7 @@ def get_high_conf(model, classifier, dataloader, args):
                 image_features = (
                     output["image_features"] if isinstance(output, dict) else output[0]
                 )
-                logits = F.softmax(image_features @ classifier, dim=1)
+                logits = image_features @ classifier
 
                 # Process each prediction in the batch
                 for i in range(logits.size(0)):
@@ -158,7 +158,7 @@ def uot_badmm(x: torch.Tensor, p0: torch.Tensor, q0: torch.Tensor,
     z1 = torch.zeros_like(p0)  # (B, 1, D)
     z2 = torch.zeros_like(q0)  # (B, N, 1)
     for k in range(num):
-        n = min([k, a1.shape[0] - 1])
+        n = k
 
         # update logP
         y = ((x - z) + log_s)  # (B, N, D)
@@ -174,13 +174,13 @@ def uot_badmm(x: torch.Tensor, p0: torch.Tensor, q0: torch.Tensor,
         s = torch.exp(log_s)
         z = z * (t - s)
         y = ( log_mu + log_p0 - z1)  # (B, 1, D)
-        log_mu = y - torch.logsumexp(y, dim=1, keepdim=True)  # (B, 1, D)
+        log_mu = y - torch.logsumexp(y, dim=0, keepdim=True)  # (B, 1, D)
         y = (log_eta + log_q0 - z2)  # (B, N, 1)
-        ymin, _ = torch.min(y, dim=1, keepdim=True)
+        ymin, _ = torch.min(y, dim=0, keepdim=True)
         ymax, _ = torch.max(ymin - ymin + y, dim=0, keepdim=True)  # (B, 1, D)
         log_eta = (y - torch.log(
             torch.sum(torch.exp((y - ymax)), dim=0, keepdim=True)) - ymax)  # (B, N, 1)
         # update dual variables
         z1 = z1 + (torch.exp(log_mu) - torch.sum(s, dim=0, keepdim=True))  # (B, 1, D)
-        z2 = z2 + (torch.exp(log_eta) - torch.sum(t, dim=1, keepdim=True))  # (B, N, 1)
+        z2 = z2 + (torch.exp(log_eta) - torch.sum(t, dim=0, keepdim=True))  # (B, N, 1)
     return torch.exp(log_t)

@@ -1,6 +1,7 @@
 from functools import partial
 from itertools import islice
 from typing import Callable, List, Optional, Sequence, Union
+from transformers import BertTokenizer, BertModel
 
 import torch
 import torch.nn.functional as F
@@ -80,6 +81,50 @@ def build_zero_shot_classifier(
         else:
             zeroshot_weights = _process_batch(classnames)
     return zeroshot_weights
+    # Load pre-trained BERT model and tokenizer
+#     PATH = '/dfs/data/main/OT-CLIP/src/open_clip/bert-large-uncased'
+#     bert_model = BertModel.from_pretrained(PATH, return_dict=True, local_files_only=True)
+#     tokenizer = BertTokenizer.from_pretrained(PATH, local_files_only=True)
+
+#     def _process_batch(batch_classnames):
+#         num_batch_classes = len(batch_classnames)
+#         texts = [
+#             template.format(c) if use_format else template(c)
+#             for c in batch_classnames
+#             for template in templates
+#         ]
+
+#         # Tokenize and encode texts using BERT
+#         inputs = tokenizer(texts, padding=True, truncation=True, max_length=77, return_tensors="pt").to(device)
+#         with torch.no_grad():
+#             outputs = bert_model(**inputs)
+
+#         # Use the mean of the last hidden states as class embeddings
+#         class_embeddings = outputs.last_hidden_state.mean(dim=1)
+#         class_embeddings = class_embeddings.reshape(
+#             num_batch_classes, num_templates, -1
+#         ).mean(dim=1)
+
+#         # Normalize the embeddings
+#         class_embeddings = class_embeddings / class_embeddings.norm(dim=1, keepdim=True)
+#         class_embeddings = class_embeddings.T
+
+#         return class_embeddings
+
+#     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+#     bert_model = bert_model.to(device)
+
+#     with torch.no_grad():
+#         if num_classes_per_batch:
+#             batched_embeds = [
+#                 _process_batch(batch)
+#                 for batch in iter_wrap(batched(classnames, num_classes_per_batch))
+#             ]
+#             zeroshot_weights = torch.cat(batched_embeds, dim=1)
+#         else:
+#             zeroshot_weights = _process_batch(classnames)
+
+#     return zeroshot_weights
 
 
 def build_zero_shot_classifier_legacy(

@@ -17,6 +17,7 @@ from functools import partial
 
 from .hf_model import HFTextEncoder
 from .modified_resnet import ModifiedResNet
+from .ot_resnet import OTResNet
 from .timm_model import TimmModel
 from .transformer import LayerNormFp32, LayerNorm, QuickGELU, Attention, VisionTransformer, TextTransformer,\
     text_global_pool
@@ -130,6 +131,7 @@ def _build_vision_tower(
         )
     elif isinstance(vision_cfg.layers, (tuple, list)):
         vision_heads = vision_cfg.width * 32 // vision_cfg.head_width
+
         visual = ModifiedResNet(
             layers=vision_cfg.layers,
             output_dim=embed_dim,
@@ -137,6 +139,13 @@ def _build_vision_tower(
             image_size=vision_cfg.image_size,
             width=vision_cfg.width,
         )
+#         visual = OTResNet(
+#             layers=vision_cfg.layers,
+#             output_dim=embed_dim,
+#             heads=vision_heads,
+#             image_size=vision_cfg.image_size,
+#             width=vision_cfg.width,
+#         )
     else:
         vision_heads = vision_cfg.width // vision_cfg.head_width
         norm_layer = LayerNormFp32 if cast_dtype in (torch.float16, torch.bfloat16) else LayerNorm
@@ -233,7 +242,6 @@ class CLIP(nn.Module):
     ):
         super().__init__()
         self.output_dict = output_dict
-
         self.visual = _build_vision_tower(embed_dim, vision_cfg, quick_gelu, cast_dtype)
 
         text = _build_text_tower(embed_dim, text_cfg, quick_gelu, cast_dtype)
@@ -268,7 +276,6 @@ class CLIP(nn.Module):
 
     def encode_text(self, text, normalize: bool = False):
         cast_dtype = self.transformer.get_cast_dtype()
-
         x = self.token_embedding(text).to(cast_dtype)  # [batch_size, n_ctx, d_model]
 
         x = x + self.positional_embedding.to(cast_dtype)

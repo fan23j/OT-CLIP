@@ -13,7 +13,7 @@ from .constants import OPENAI_DATASET_MEAN, OPENAI_DATASET_STD
 from .model import CLIP, CustomTextCLIP, convert_weights_to_lp, convert_to_custom_text_state_dict,\
     resize_pos_embed, get_cast_dtype, resize_text_pos_embed, set_model_preprocess_cfg
 from .coca_model import CoCa
-from .loss import ClipLoss
+from .loss import ClipLoss, SigLipLoss
 from .openai import load_openai_model
 from .pretrained import is_pretrained_cfg, get_pretrained_cfg, download_pretrained,\
     list_pretrained_tags_by_model, download_pretrained_from_hf
@@ -321,6 +321,12 @@ def create_model(
 
 
 def create_loss(args):
+    if args.siglip:
+        assert not args.horovod, "Horovod not currently supported for SigLip"
+        return SigLipLoss(
+            rank=args.rank,
+            world_size=args.world_size,
+        )
     return ClipLoss(
         losses=args.losses,
         local_loss=args.local_loss,
